@@ -1,0 +1,15 @@
+/workspaces/kluwiOS/lab1os/obj/Debug/net10.0/lab1os.GeneratedMSBuildEditorConfig.editorconfig
+/workspaces/kluwiOS/lab1os/obj/Debug/net10.0/lab1os.AssemblyInfoInputs.cache
+/workspaces/kluwiOS/lab1os/obj/Debug/net10.0/lab1os.AssemblyInfo.cs
+/workspaces/kluwiOS/lab1os/obj/Debug/net10.0/lab1os.csproj.CoreCompileInputs.cache
+/workspaces/kluwiOS/lab1os/obj/Debug/net10.0/lab1os.sourcelink.json
+/workspaces/kluwiOS/lab1os/bin/Debug/net10.0/lab1os
+/workspaces/kluwiOS/lab1os/bin/Debug/net10.0/lab1os.deps.json
+/workspaces/kluwiOS/lab1os/bin/Debug/net10.0/lab1os.runtimeconfig.json
+/workspaces/kluwiOS/lab1os/bin/Debug/net10.0/lab1os.dll
+/workspaces/kluwiOS/lab1os/bin/Debug/net10.0/lab1os.pdb
+/workspaces/kluwiOS/lab1os/obj/Debug/net10.0/lab1os.dll
+/workspaces/kluwiOS/lab1os/obj/Debug/net10.0/refint/lab1os.dll
+/workspaces/kluwiOS/lab1os/obj/Debug/net10.0/lab1os.pdb
+/workspaces/kluwiOS/lab1os/obj/Debug/net10.0/lab1os.genruntimeconfig.cache
+/workspaces/kluwiOS/lab1os/obj/Debug/net10.0/ref/lab1os.dll
