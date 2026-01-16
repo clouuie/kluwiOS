@@ -1,0 +1,15 @@
+// question 1: system call: wherein use system calls like fork, getpid, and wait
+// first process parent; create a child to get a pid, create 4 children from the parent of the previous child
+// 5 pid will be printed per child. then wait the last child before printing the next child
+
+// create a parent and that parent would create a child of a child  of a child. the first pid should be the last process and the last pid should be the first one or the parent
+
+
+// task 2: create an fcfs scheduling but there is 10 processes which are the ff: 
+// BT: 9 8 7 8 7 8 2 1 2 5
+// AT: 0 1 2 3 4 5 6 7 8 9
+
+// task 3: 5 elements: sjf
+// BT: 99.99 107.9 143.77 20.24 50.55 66.66
+
+// same BT as 3; quantum time: 25, round robin

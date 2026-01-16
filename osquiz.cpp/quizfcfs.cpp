@@ -1,4 +1,7 @@
-#include <stdio.h>
+#include <iostream>
+#include <iomanip>
+
+using namespace std;
 
 int main()
 {
@@ -31,14 +34,38 @@ int main()
     wtavg += wt[0];
     tatavg += tat[0];
 
-    printf("\n\tPROCESS\tARRIVAL TIME\tBURST TIME\tWAITING TIME\tTURNAROUND TIME\n");
+    // Gantt Chart
+    cout << "\n\tGANTT CHART\n";
+    cout << "\t";
     for(i = 0; i < n; i++)
     {
-        printf("\tP%d\t%d\t\t%d\t\t%d\t\t%d\n", i+1, at[i], bt[i], wt[i], tat[i]);
+        cout << "+-----";
+    }
+    cout << "+\n\t";
+    for(i = 0; i < n; i++)
+    {
+        cout << "| P" << i+1 << "  ";
+    }
+    cout << "|\n\t";
+    for(i = 0; i < n; i++)
+    {
+        cout << "+-----";
+    }
+    cout << "+\n\t";
+    for(i = 0; i < n; i++)
+    {
+        cout << ct[i] << "    ";
+    }
+    cout << "\n";
+
+    cout << "\n\tPROCESS\tARRIVAL TIME\tBURST TIME\tWAITING TIME\tTURNAROUND TIME\n";
+    for(i = 0; i < n; i++)
+    {
+        cout << "\tP" << i+1 << "\t" << at[i] << "\t\t" << bt[i] << "\t\t" << wt[i] << "\t\t" << tat[i] << "\n";
     }
 
-    printf("\nAverage Waiting Time -- %.2f", wtavg/n);
-    printf("\nAverage Turnaround Time -- %.2f\n", tatavg/n);
+    cout << "\nAverage Waiting Time -- " << fixed << setprecision(2) << wtavg/n;
+    cout << "\nAverage Turnaround Time -- " << fixed << setprecision(2) << tatavg/n << "\n";
 
     return 0;
 }
