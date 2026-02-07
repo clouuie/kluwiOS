@@ -1,0 +1,29 @@
+instruction: 1 program only. cpp.
+
+needs to execute following functions: sjf, srtf, rr
+modular. will accept either vector or array.
+will add recommended quantum time: round robin will be the one to calculate quantum time - either mean or median. function will be named recommended quantum time: should be whole number and would be brought to the round robin
+
+inside the process there should be variables. data type should have pid for process, at for arrival time, bt for burst time, tt for turnaround time, wt for waiting time, ct for completion time
+should be in structure
+
+in main: the user will no longer input the value for AT and BT. it should be declared in the main.
+if we run this code, the recommended quantum time will be calculated and it. needs to be initiated.
+
+sjf - create a table with columns process id, at, bt, ct, tt, wt
+this table will repeat for srtf, and rr but under these tables there should have avett and avewt
+
+
+output order should be:
+
+reco quantum time
+name of algo
+table
+average
+
+values of AT and BT that the three algorithms will use: AT: 1 3 8 4 6 7 2 5 BT: 53 43 18 16 24 73 99 27
+
+order should be:
+sjf
+srtf
+rr

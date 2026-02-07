@@ -13,7 +13,7 @@ struct ProcessExecution {
 
 int main()
 {
-    float bt[] = {99.99, 107.9, 143.77, 20.24, 50.55, 66.66};
+    float bt[] = {53, 43,};
     int n = sizeof(bt) / sizeof(bt[0]);
     float wt[20], tat[20];
     int i, pid[20];
