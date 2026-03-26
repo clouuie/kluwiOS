@@ -1,0 +1,339 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <memory>
+#include <algorithm>
+
+using namespace std;
+
+// ============ ENUMERATIONS ============
+// AA: Process type classification
+enum class AA { SYSTEM, INTERACTIVE, BATCH };
+
+// BB: Process state during execution
+enum class BB { READY, RUNNING, BLOCKED, TERMINATED };
+
+// ============ PROCESS STRUCTURE ============
+struct CC {
+    // Process identification and type
+    int DD;              // Process ID
+    AA EE;               // Process type (SYSTEM, INTERACTIVE, or BATCH)
+    
+    // CPU time tracking
+    int FF;              // Total CPU time required
+    int GG;              // Remaining CPU time
+    
+    // Multi-level queue tracking
+    int HH;              // Current priority level (0=highest, 2=lowest)
+    int II;              // Aging counter for priority boost
+    
+    // Process state
+    BB JJ;               // Current state (READY, RUNNING, BLOCKED, TERMINATED)
+    
+    // Resource management (Banker's Algorithm)
+    vector<int> KK;      // Maximum resources needed
+    vector<int> LL;      // Currently allocated resources
+    vector<int> MM;      // Remaining resources still needed
+    
+    // Constructor: Initialize process with PID, type, CPU time, and max resources
+    CC(int pid, AA t, int cpuTime, const vector<int>& maxRes)
+        : DD(pid), EE(t), FF(cpuTime), GG(cpuTime),
+          HH(0), II(0), JJ(BB::READY),
+          KK(maxRes), LL(maxRes.size(), 0), MM(maxRes) {}
+};
+
+// ============ RESOURCE MANAGER (BANKER'S ALGORITHM) ============
+class NN {
+private:
+    vector<int> available;              // Available resources for allocation
+    vector<shared_ptr<CC>> allProcesses; // All processes in system
+
+    public:
+    // Constructor: Initialize with available resources
+    NN(const vector<int>& initialResources)
+        : available(initialResources) {}
+
+    // OO: Add process to tracking list
+    void OO(shared_ptr<CC> p) {
+        allProcesses.push_back(p);
+    }
+
+    // PP: Request and allocate resources (Banker's Algorithm)
+    // Returns true if allocation is safe, false if blocked
+    bool PP(shared_ptr<CC> p, const vector<int>& request) {
+        // Check if request is valid (non-negative and within max)
+        for (size_t i = 0; i < request.size(); ++i) {
+            if (request[i] < 0 || request[i] > p->MM[i]) {
+                return false;
+            }
+        }
+
+        // Check if resources are available
+        for (size_t i = 0; i < request.size(); ++i) {
+            if (request[i] > available[i]) {
+                p->JJ = BB::BLOCKED; // Block process if insufficient resources
+                return false;
+            }
+        }
+
+        // Allocate resources: update available, allocated, and remaining
+        for (size_t i = 0; i < request.size(); ++i) {
+            available[i] -= request[i];      // Decrease available
+            p->LL[i] += request[i];          // Increase allocated
+            p->MM[i] -= request[i];          // Decrease remaining needed
+        }
+
+        p->JJ = BB::READY;
+        return true;
+    }
+
+    // QQ: Release all resources held by process
+    void QQ(shared_ptr<CC> p) {
+        for (size_t i = 0; i < p->LL.size(); ++i) {
+            available[i] += p->LL[i];  // Return resources to pool
+            p->LL[i] = 0;              // Clear allocated resources
+        }
+    }
+
+    // RR: Check blocked processes and wake up those that can acquire resources
+    vector<shared_ptr<CC>> RR() {
+        vector<shared_ptr<CC>> wokeUp;
+
+        for (auto& p : allProcesses) {
+            if (p->JJ == BB::BLOCKED) {
+                // Attempt minimal retry request (1 unit per resource)
+                vector<int> retryRequest(p->MM.size(), 0);
+                for (size_t i = 0; i < retryRequest.size(); ++i) {
+                    if (p->MM[i] > 0) {
+                        retryRequest[i] = min(1, p->MM[i]);
+                    }
+                }
+
+                // Check if retry request can be fulfilled
+                bool canAlloc = true;
+                for (size_t i = 0; i < retryRequest.size(); ++i) {
+                    if (retryRequest[i] > available[i]) {
+                        canAlloc = false;
+                        break;
+                    }
+                }
+
+                // Allocate and transition to READY
+                if (canAlloc && PP(p, retryRequest)) {
+                    p->JJ = BB::READY;
+                    wokeUp.push_back(p);
+                }
+            }
+        }
+        return wokeUp;
+    }
+
+    // SS: Display current available resources
+    void SS() const {
+        cout << " Available: [";
+        for (size_t i = 0; i < available.size(); ++i) {
+            cout << available[i];
+            if (i < available.size() - 1) cout << ", ";
+        }
+        cout << "]\n";
+    }
+};
+
+// ============ SCHEDULER (MULTI-LEVEL QUEUE WITH AGING) ============
+class TT {
+private:
+    // 3D queue structure: [process_type][priority_level][queue]
+    vector<vector<queue<shared_ptr<CC>>>> queues;
+    vector<int> timeQuantum;      // Time slice per priority level
+    vector<int> agingThreshold;   // Steps before aging up a level
+
+    // YY: Map process type to queue index (0=SYSTEM, 1=INTERACTIVE, 2=BATCH)
+    int YY(AA t) const {
+        return (t == AA::SYSTEM) ? 0 :
+               (t == AA::INTERACTIVE) ? 1 : 2;
+    }
+
+public:
+    // Constructor: Initialize scheduler with levels, quanta, and aging thresholds
+    TT(int numLevels, const vector<int>& quanta, const vector<int>& aging)
+        : timeQuantum(quanta), agingThreshold(aging) {
+        queues.resize(3); // 3 process types
+        for (auto& typeQueues : queues)
+            typeQueues.resize(numLevels); // Each type has multiple levels
+    }
+
+    // OO: Add new process to highest priority queue (level 0)
+    void OO(shared_ptr<CC> p) {
+        p->HH = 0;      // Start at level 0
+        p->II = 0;      // Reset aging counter
+        int typeIdx = YY(p->EE);
+        queues[typeIdx][0].push(p);
+    }
+
+    // UU: Requeue process after time slice expiration
+    void UU(shared_ptr<CC> p) {
+        int typeIdx = YY(p->EE);
+        queues[typeIdx][p->HH].push(p);
+    }
+
+    // XX: Select next process to run (highest priority first)
+    shared_ptr<CC> XX() {
+        for (int typeIdx = 0; typeIdx < 3; ++typeIdx) {
+            for (size_t level = 0; level < queues[typeIdx].size(); ++level) {
+                auto& q = queues[typeIdx][level];
+                if (!q.empty()) {
+                    auto p = q.front();
+                    q.pop();
+                    return p;
+                }
+            }
+        }
+        return nullptr;
+    }
+
+    // W: Age processes - move waiting processes up in priority
+    void W() {
+        for (int typeIdx = 0; typeIdx < 3; ++typeIdx) {
+            for (size_t level = 1; level < queues[typeIdx].size(); ++level) {
+                auto& fromQueue = queues[typeIdx][level];
+                auto& toQueue = queues[typeIdx][level - 1];
+
+                size_t size = fromQueue.size();
+                for (size_t i = 0; i < size; ++i) {
+                    auto p = fromQueue.front();
+                    fromQueue.pop();
+
+                    p->II++; // Increment aging counter
+                    // If threshold reached, promote to higher priority
+                    if ((size_t)p->II >= agingThreshold[level - 1]) {
+                        p->HH = level - 1;
+                        p->II = 0;
+                        toQueue.push(p);
+                    } else {
+                        fromQueue.push(p);
+                    }
+                }
+            }
+        }
+    }
+
+    // WW: Get time quantum for a priority level
+    int WW(int level) const {
+        if (level >= 0 && level < (int)timeQuantum.size())
+            return timeQuantum[level];
+        return timeQuantum.back();
+    }
+};
+
+// ============ MAIN SIMULATION ============
+int main() {
+    cout << " ====== Resource-Aware Scheduler (MLQ + MLFQ + Banker's) ====== \n\n";
+
+    // Initialize resource manager with 2 types of resources
+    vector<int> resources = {15, 8};
+    NN rm(resources);
+
+    // Initialize scheduler: 3 levels, quanta [2,4,6], aging thresholds [3,6]
+    TT ZZ(3, {2, 4, 6}, {3, 6});
+
+    // Create 3 processes with different types and resource needs
+    auto p1 = make_shared<CC>(1, AA::SYSTEM, 10, vector<int>{5, 2});
+    auto p2 = make_shared<CC>(2, AA::INTERACTIVE, 8, vector<int>{3, 1});
+    auto p3 = make_shared<CC>(3, AA::BATCH, 12, vector<int>{4, 2});
+
+    // Register processes in resource manager and scheduler
+    rm.OO(p1); rm.OO(p2); rm.OO(p3);
+    ZZ.OO(p1); ZZ.OO(p2); ZZ.OO(p3);
+
+    // ============ MAIN SIMULATION LOOP ============
+    int timeStep = 0;
+    int maxTime = 60;
+
+    while (timeStep < maxTime) {
+        cout << "\n --- Time Step " << timeStep << " --- \n";
+
+        // Perform aging: promote waiting processes
+        ZZ.W();
+        
+        // Check blocked processes and wake up those with available resources
+        auto wokeUp = rm.RR();
+        for (auto p : wokeUp) {
+            cout << "Process " << p->DD << " unblocked\n";
+            ZZ.UU(p);
+        }
+
+        // Get next process from scheduler
+        auto current = ZZ.XX();
+
+        // Handle idle time if no process ready
+        if (!current) {
+            cout << "No ready processes.\n";
+            rm.SS();
+            timeStep++;
+            continue;
+        }
+
+        // Execute process for its time quantum
+        current->JJ = BB::RUNNING;
+        int quantum = ZZ.WW(current->HH);
+
+        string typeStr = (current->EE == AA::SYSTEM) ? "SYSTEM" :
+                         (current->EE == AA::INTERACTIVE) ? "INTERACTIVE" : "BATCH";
+
+        cout << "Running Process " << current->DD
+             << " (" << typeStr << ", Level " << current->HH
+             << ") for " << quantum << " time units\n";
+
+        // Decrease remaining CPU time
+        current->GG -= quantum;
+        if (current->GG < 0)
+            current->GG = 0;
+
+        // 30% chance: process requests resources
+        if (current->GG > 0 && (rand() % 100) < 30) {
+            vector<int> request = {1, 0};
+            cout << " Request resources: [1, 0]\n";
+
+            if (!rm.PP(current, request)) {
+                cout << " Request BLOCKED\n";
+                timeStep++;
+                continue;
+            }
+
+            cout << " Request GRANTED\n";
+        }
+
+        // Check if process completed
+        if (current->GG == 0) {
+            current->JJ = BB::TERMINATED;
+            cout << " Process " << current->DD << " COMPLETED\n";
+            rm.QQ(current); // Release resources
+        } else {
+            // Process not done: demote priority and requeue
+            if (current->HH < 2) {
+                current->HH++;
+            }
+            current->II = 0;
+            current->JJ = BB::READY;
+            ZZ.UU(current);
+        }
+
+        // Display resource state
+        rm.SS();
+
+        // Check if all processes completed
+        bool allDone = (p1->JJ == BB::TERMINATED &&
+                        p2->JJ == BB::TERMINATED &&
+                        p3->JJ == BB::TERMINATED);
+
+        if (allDone) {
+            cout << "\n == All Processes Completed == \n";
+            break;
+        }
+
+        timeStep++;
+    }
+
+    cout << "\n === Simulation Finished === \n";
+    return 0;
+}
